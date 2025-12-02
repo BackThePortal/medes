@@ -1,0 +1,20 @@
+@startuml
+'https://plantuml.com/class-diagram
+hide members
+set separator ::
+skinparam dpi 300
+skinparam linetype ortho
+
+
+abstract class method_tree_node
+
+class MethodTree << (C,#22B9B8) >>
+
+class method extends method_tree_node
+class group extends method_tree_node
+class service extends group
+
+group o-left- method
+group o-- MethodTree
+method_tree_node <-- MethodTree
+@enduml
