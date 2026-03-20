@@ -11,27 +11,33 @@
 #include <curlpp/Options.hpp>
 #include "medes/medes.h"
 
+namespace medes::curlpp_adapter {
+    struct response_data {
+        std::stringstream body;
+        long status;
+    };
+}
+
+
+template<>
+struct medes::response_data_traits<medes::curlpp_adapter::response_data> {
+    using body_type = decltype(curlpp_adapter::response_data::body);
+    using status_type = decltype(curlpp_adapter::response_data::status);
+};
 
 namespace medes::curlpp_adapter {
-    class curlpp_request_protocol : request_protocol<request_data, raw_response_data> {
+    class curlpp_request_protocol {
     private:
+
     public:
+        using request_data_type = request_data;
+        using response_data_type = response_data;
         curlpp_request_protocol() = default;
 
-        raw_response_data request(const request_data_type& request_data_obj) override {
-            raw_response_data response;
-            curlpp::Easy request;
-            request.setOpt(new curlpp::options::Url(request_data_obj.url));
-            request.setOpt(new curlpp::options::HttpHeader(make_headers(request_data_obj.headers)));
-            request.setOpt(new curlpp::options::WriteStream(&response.body));
-
-            request.perform();
-
-            response.status_code = curlpp::infos::ResponseCode::get(request);
-
-            return response;
-        };
+        static response_data request(const request_data_type& request);
     };
+
+    static_assert(RequestProtocol<curlpp_request_protocol>);
 }
 
 #endif //MEDES_CURLPP_ADAPTER_H

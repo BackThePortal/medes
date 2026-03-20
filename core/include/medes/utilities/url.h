@@ -27,10 +27,16 @@ namespace medes {
     constexpr auto join_urls() {
         if constexpr (sizeof...(Urls) == 0) return First;
         if constexpr (sizeof...(Urls) == 1) {
-            return internal::remove_postfix(First, internal::string_literal("/")) + "/" + (internal::remove_prefix(
-                       Urls, internal::string_literal("/")) + ...);
+            return internal::remove_postfix<First, internal::string_literal("/")>() + "/" + (internal::remove_prefix<
+                       (Urls + ...), internal::string_literal("/") >());
         } else return join_urls<First, join_urls<Urls...>()>();
     }
+
+    static_assert(ends_with(internal::string_literal("hola//"), internal::string_literal("//")));
+    static_assert(starts_with(internal::string_literal("//hola//"), internal::string_literal("//")));
+    static_assert(internal::remove_postfix<internal::string_literal("//hola//"), internal::string_literal("//")>() == "//hola");
+    static_assert(internal::remove_prefix<internal::string_literal("//hola//"), internal::string_literal("//")>() == "hola//");
+    static_assert(join_urls<"hola/", "3">() == "hola/3");
 }
 
 #endif //MEDES_CORE_URL_H

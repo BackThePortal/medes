@@ -31,7 +31,7 @@ namespace medes::internal {
 
         consteval string_literal(const char (& str)[N]) {
             std::copy_n(str, N, this->data);
-        }// NOLINT(*-explicit-constructor)
+        } // NOLINT(*-explicit-constructor)
 
         consteval string_literal(std::string_view sv) {
             // N must be sv.size() + 1
@@ -71,7 +71,9 @@ namespace medes::internal {
          */
         [[nodiscard]] consteval std::size_t size() const { return N - 1; }
 
-        constexpr operator std::string_view() const {// NOLINT(*-explicit-constructor)
+        [[nodiscard]] consteval bool empty() const { return N == 1; }
+
+        constexpr operator std::string_view() const { // NOLINT(*-explicit-constructor)
             return std::string_view(this->data, N - 1);
         }
 
@@ -81,7 +83,7 @@ namespace medes::internal {
          */
         [[nodiscard]] consteval int count(char c) const {
             int n = 0;
-            for (int i = 0; i < N; ++i) {
+            for (std::size_t i = 0; i < N; ++i) {
                 if (this->data[i] == c) ++n;
             }
             return n;
@@ -92,7 +94,7 @@ namespace medes::internal {
          */
         [[nodiscard]] constexpr char* begin() { return this->data; }
         [[nodiscard]] constexpr const char* begin() const { return this->data; }
-        [[nodiscard]] constexpr const char* cbegin() const  { return this->data; }
+        [[nodiscard]] constexpr const char* cbegin() const { return this->data; }
 
         /**
          * @returns A pointer past the last character of the string. If it's empty, begin() == end().
@@ -137,8 +139,9 @@ namespace medes::internal {
     }
 
     template<std::size_t s1, std::size_t s2>
-  consteval bool ends_with(string_literal<s1> str, string_literal<s2> postfix) {
-        return str.size() >= postfix.size() && std::equal(postfix.cbegin(), postfix.cend(), str.cend() - postfix.size());
+    consteval bool ends_with(string_literal<s1> str, string_literal<s2> postfix) {
+        return str.size() >= postfix.size() && std::equal(postfix.cbegin(), postfix.cend(),
+                                                          str.cend() - postfix.size() - 1);
     }
 
     template<std::size_t s>
@@ -148,31 +151,33 @@ namespace medes::internal {
 
     template<std::size_t s1, std::size_t s2>
     consteval bool starts_with(string_literal<s1> str, string_literal<s2> prefix) {
-        return str.size() >= prefix.size() && std::equal(prefix.cbegin(), prefix.cend(), str.cbegin());
+        return str.size() >= prefix.size() && std::equal(prefix.cbegin(), prefix.cend() - 1, str.cbegin());
     }
 
 
-    template<std::size_t s1, std::size_t s2>
-    consteval auto remove_postfix(string_literal<s1> str, string_literal<s2> postfix) {
-        if (ends_with(str, postfix)) {
-            return string_literal<s1 - postfix.size() + 1>(std::string_view(str.cbegin(), str.cend() - postfix.size()));
+    // TODO the math ain't mathing here
+    template<string_literal Str, string_literal Postfix>
+    consteval auto remove_postfix() {
+        if constexpr (ends_with(Str, Postfix)) {
+            return string_literal<Str.Length - Postfix.size()>(
+                std::string_view(Str.cbegin(), Str.size() - Postfix.size() - 1));
+        } else return Str;
+    }
+
+    template<string_literal Str, string_literal Prefix>
+    consteval auto remove_prefix() {
+        if constexpr (starts_with(Str, Prefix)) {
+            return string_literal<Str.Length - Prefix.size()>(
+                std::string_view(Str.cbegin() + Prefix.size(), Str.cend()));
+        } else return Str;
+    }
+
+    /*
+       template<std::size_t N, std::size_t Index, auto Func>
+        consteval auto get_literal_at() {
+            return string_literal<Func()[Index].size() + 1>{Func()[Index]};
         }
-        return str;
-    }
-
-    template<std::size_t s1, std::size_t s2>
-    consteval auto remove_prefix(string_literal<s1> str, string_literal<s2> prefix) {
-        if (starts_with(str, prefix)) {
-            return string_literal<s1 - prefix.size() + 1>(std::string_view(str.cbegin() + prefix.size(), str.cend()));
-        }
-        return str;
-    }
-/*
-   template<std::size_t N, std::size_t Index, auto Func>
-    consteval auto get_literal_at() {
-        return string_literal<Func()[Index].size() + 1>{Func()[Index]};
-    }
-*/
+    */
 
     constexpr char to_upper(char c) {
         return (c >= 'a' && c <= 'z') ? static_cast<char>(c - 'a' + 'A') : c;
@@ -200,5 +205,5 @@ namespace medes::internal {
         }
         return result;
     }
-}// namespace dpp_structures::internal
+} // namespace dpp_structures::internal
 #endif //MEDES_STRING_LITERAL_H

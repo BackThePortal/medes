@@ -25,8 +25,8 @@ namespace medes {
         basic_endpoint() = default;
 
     public:
-        static_assert(LiteralURL.size() != 0, "URL may not be empty");
-        static_assert(LiteralURL.back() != '/', "URL may not end with a slash");
+        //static_assert(LiteralURL.size() != 0, "URL may not be empty");
+        static_assert(LiteralURL.empty() || LiteralURL.back() != '/', "URL may not end with a slash");
 
         using query_params = query_params_handler<QueryKeys...>;
 

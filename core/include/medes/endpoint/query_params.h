@@ -9,7 +9,7 @@
 #include "medes/internal/meta.h"
 #include "medes/internal/string_convert.h"
 #include "string_build.h"
-#include <nlohmann/json.hpp>
+//#include <nlohmann/json.hpp>
 
 namespace medes {
     enum class query_key_requirement {
@@ -30,7 +30,7 @@ namespace medes {
          * @brief Convert the value to a nlohmann::json object and then use the json::get\<std::string> endpoint to convert
          * it to a string.
          */
-        THROUGH_JSON,
+        //THROUGH_JSON,
     };
 
     /*
@@ -45,8 +45,8 @@ namespace medes {
         struct [[maybe_unused]] _query_base_tag {
         };
 
-        static_assert(internal::ConvertibleToString<ValueType> || std::is_same_v<ValueType, bool> ||
-                      ConvertPolicy == query_value_convert::THROUGH_JSON);
+        static_assert(internal::ConvertibleToString<ValueType> || std::is_same_v<ValueType, bool> /*||
+                      ConvertPolicy == query_value_convert::THROUGH_JSON*/);
 
         static constexpr internal::string_literal Key = TKey;
 
@@ -55,15 +55,16 @@ namespace medes {
         }
 
 
-        explicit query_base(ValueType value) requires(!std::is_same_v<ValueType, bool> &&
-                                                      internal::ConvertibleToString<ValueType>)
-            : value(internal::string_convert<ValueType>(value)) {
+        explicit query_base(ValueType&& value) requires(!std::is_same_v<ValueType, bool> &&
+                                                        internal::ConvertibleToString<ValueType>)
+            : value(internal::string_convert<ValueType>::make_string(std::forward<ValueType>(value))) {
         }
 
-
+/*
         explicit query_base(ValueType value) requires(ConvertPolicy == query_value_convert::THROUGH_JSON)
             : value(nlohmann::json(value).get<std::string>()) {
         }
+        */
 
         query_base() = default;
 
@@ -120,7 +121,7 @@ namespace medes {
          */
         template<QueryKeyDescr QueryTarget>
         QueryTarget get_query() {
-            return QueryTarget{value};
+            return QueryTarget{std::forward<ValueType>(value)};
         }
     };
 
@@ -135,7 +136,6 @@ namespace medes {
 
     template<typename T>
     concept QueryValue = requires { typename T::_query_value_tag; };
-
 
 
     struct validate_query_parameters_result {
@@ -175,7 +175,7 @@ namespace medes {
         static constexpr std::size_t find_query_by_key_impl(int n = 0) {
             if constexpr (First::Key == Key) return n;
             else {
-                static_assert(sizeof...(Rest) == 0, "Query by key not found");
+                static_assert(sizeof...(Rest) != 0, "Query by key not found");
                 return find_query_by_key_impl<Key, Rest...>(n + 1);
             }
         }

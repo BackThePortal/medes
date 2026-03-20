@@ -6,6 +6,7 @@
 #define MEDES_STRING_CONVERT_H
 
 #include <concepts>
+#include <sstream>
 #include <type_traits>
 #include <string>
 #include "meta.h"
@@ -35,6 +36,13 @@ namespace medes::internal {
      * because std::to_string is for builtin numerical types, for which the
      * std::string constructor isn't defined.
      */
+
+    template<>
+    struct string_convert<std::stringstream> {
+        static std::string make_string(std::stringstream&& stringstream) {
+            return stringstream.str();
+        }
+    };
 
 /**
      * @brief A type that can be converted to a string using string_convert.

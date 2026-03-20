@@ -67,9 +67,15 @@ namespace medes {
         static resolved_endpoint make(TargetQueryKeys... query_keys_raw) {
             return make(path_params_list{}, query_keys_raw...);
         }
+
+        // CAREFUL! Do not cause infinite recursion here!!
         template<internal::ConvertibleToString... Ts>
-        static resolved_endpoint make(Ts&&... values) {
-            return make(path_params::template validate_and_make<>(path_params_list(internal::string_convert<Ts>::make_string(std::forward<Ts>(values))...)));
+         static resolved_endpoint make(Ts&&... values) {
+            return resolved_endpoint(path_params::template validate_and_make<>(path_params_list(internal::string_convert<Ts>::make_string(std::forward<Ts>(values))...)));
+        }
+
+        static resolved_endpoint make() {
+            return make(path_params_list{});
         }
 
 

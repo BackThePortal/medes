@@ -5,7 +5,7 @@ using namespace medes;
 // ReSharper disable once CppDFAConstantFunctionResult
 std::string medes::make_query(const std::map<std::string, std::string>& query_map) {
     std::string query_string = "?";
-    int i = 0;
+    std::size_t i = 0;
     for (const auto& [key, value] : query_map) {
         ++i;
         query_string.append(key);
@@ -21,7 +21,10 @@ std::string medes::make_query(const std::map<std::string, std::string>& query_ma
 std::list<std::string> medes::make_headers(const std::multimap<std::string, std::string>& headers) {
     std::list<std::string> headers_list;
     for (auto& [k,v] : headers) {
-        headers_list.push_back(k + ": " + v);
+        std::string result = k;
+        result.append(": ");
+        result.append(v);
+        headers_list.push_back(std::move(result));
     }
     return headers_list;
 }

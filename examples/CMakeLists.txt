@@ -1,12 +1,23 @@
-include(FetchContent)
-cmake_minimum_required(VERSION 4.0)
-project(medes_examples)
+function(medes_add_example name)
+    cmake_parse_arguments(ARG "" "" "ADAPTERS" ${ARGN})
 
-set(CMAKE_CXX_STANDARD 23)
+    add_executable(${name} ${ARG_UNPARSED_ARGUMENTS})
 
-find_package(medes)
+    target_link_libraries(${name}
+            PRIVATE
+            medes::core
+            ${ARG_ADAPTERS}
+    )
 
-add_executable(
-        medes_examples
-        basic.cpp
+    set_target_properties(${name}
+            PROPERTIES
+            RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/examples
+            FOLDER examples
+    )
+endfunction()
+
+medes_add_example(
+        basic
+        basic/main.cpp
+        ADAPTERS medes::curlpp
 )

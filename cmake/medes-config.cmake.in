@@ -1,0 +1,34 @@
+@PACKAGE_INIT@
+
+include(CMakeFindDependencyMacro)
+
+
+include("${CMAKE_CURRENT_LIST_DIR}/medes-targets.cmake")
+
+# Handle components
+foreach (component ${medes_FIND_COMPONENTS})
+
+    if (component STREQUAL "curlpp")
+
+        find_dependency(curlpp)
+        find_dependency(CURL)
+
+        if (NOT TARGET medes::curlpp)
+            set(medes_curlpp_FOUND FALSE)
+        endif ()
+
+    elseif (component STREQUAL "core")
+
+        if (NOT TARGET medes::core)
+            set(medes_core_FOUND FALSE)
+        endif ()
+
+    else ()
+
+        set(medes_${component}_FOUND FALSE)
+
+    endif ()
+
+endforeach ()
+
+check_required_components(medes)

@@ -15,7 +15,7 @@ namespace medes {
     template<Service TService, internal::string_literal MethodName>
     constexpr bool method_exists_v = !std::is_same_v<typename TService::template find_endpoint<MethodName>, void>;
 
-    template<RequestProtocolConcept TRequestProtocol, internal::string_literal Name, internal::string_literal BaseUrl,
+    template<RequestProtocol TRequestProtocol, internal::string_literal Name, internal::string_literal BaseUrl,
         EndpointTree... MethodSubtrees> requires (sizeof...(MethodSubtrees) > 0)
     class service : public endpoint_tree_node<service<TRequestProtocol, Name, BaseUrl, MethodSubtrees...>, Name, BaseUrl
                 , ROOT, MethodSubtrees...> {
@@ -90,7 +90,7 @@ namespace medes {
             endpoint_exists_v<TargetName>
 #endif
         )
-        auto request(partial_request_data&& partial_request_data, Ts&&... resolved_endpoint_args) {
+        auto request(partial_request_data&& partial_request_data = {}, Ts&&... resolved_endpoint_args) {
             using endpoint = find_endpoint_impl<TargetName>;
             using resolved_endpoint = resolve_endpoint<TargetName>;
 
@@ -98,7 +98,7 @@ namespace medes {
             std::string url = resolved_endpoint::make(resolved_endpoint_args...).url;
             request_data data{endpoint::endpoint_type::httpMethod, std::move(url), std::move(partial_request_data)};
 
-            if constexpr (std::is_same_v<typename TRequestProtocol::request_arg, void>) {
+            if constexpr (HasRequestWithoutArg<TRequestProtocol>) {
                 return this->request_protocol->request(data);
             } else {
                 return [this, data = std::move(data)](typename TRequestProtocol::request_arg&& arg) {
@@ -107,11 +107,10 @@ namespace medes {
             }
         }
 
+
         std::shared_ptr<TRequestProtocol> request_protocol;
         template<typename... Ts>
-        explicit service(Ts... args) : request_protocol(std::make_shared<TRequestProtocol>(args...)) {
-
-        }
+        explicit service(Ts... args) : request_protocol(std::make_shared<TRequestProtocol>(args...)) {}
 
         explicit service(std::shared_ptr<TRequestProtocol> request_protocol_p) : request_protocol(request_protocol_p) {}
 

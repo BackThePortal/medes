@@ -8,5 +8,6 @@
 #include "endpoint/endpoint.h"
 #include "endpoint/string_build.h"
 #include "service.h"
+#include "http_methods.h"
 
 #endif //MEDES_MEDES_H
